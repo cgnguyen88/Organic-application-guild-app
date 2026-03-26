@@ -1,6 +1,87 @@
 import { Document, Paragraph, TextRun, HeadingLevel, Packer, AlignmentType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
 
+// Parse inline **bold** and *italic* markers into TextRun array
+function parseInlineRuns(text, baseSize = 24) {
+  const runs = [];
+  const regex = /(\*\*[\s\S]*?\*\*|\*[\s\S]*?\*)/g;
+  let last = 0;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) {
+      runs.push(new TextRun({ text: text.slice(last, match.index), size: baseSize }));
+    }
+    const raw = match[0];
+    if (raw.startsWith('**')) {
+      runs.push(new TextRun({ text: raw.slice(2, -2), bold: true, size: baseSize }));
+    } else {
+      runs.push(new TextRun({ text: raw.slice(1, -1), italics: true, size: baseSize }));
+    }
+    last = match.index + raw.length;
+  }
+  if (last < text.length) runs.push(new TextRun({ text: text.slice(last), size: baseSize }));
+  return runs.length ? runs : [new TextRun({ text: text || '—', size: baseSize })];
+}
+
+// Convert a markdown string into an array of docx Paragraph objects
+function markdownToDocxParagraphs(text) {
+  if (!text || !text.trim()) {
+    return [new Paragraph({ children: [new TextRun({ text: '—', size: 24, color: '94a3b8' })], spacing: { after: 100 } })];
+  }
+  const lines = text.split('\n');
+  const paragraphs = [];
+  for (const line of lines) {
+    if (/^###\s/.test(line)) {
+      paragraphs.push(new Paragraph({
+        text: line.replace(/^###\s/, ''),
+        heading: HeadingLevel.HEADING_3,
+        spacing: { before: 200, after: 80 },
+      }));
+    } else if (/^##\s/.test(line)) {
+      paragraphs.push(new Paragraph({
+        text: line.replace(/^##\s/, ''),
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 240, after: 100 },
+      }));
+    } else if (/^#\s/.test(line)) {
+      paragraphs.push(new Paragraph({
+        text: line.replace(/^#\s/, ''),
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 240, after: 100 },
+      }));
+    } else if (/^[-*•]\s/.test(line)) {
+      const content = line.replace(/^[-*•]\s/, '');
+      paragraphs.push(new Paragraph({
+        children: [
+          new TextRun({ text: '• ', size: 24, bold: true }),
+          ...parseInlineRuns(content),
+        ],
+        indent: { left: 360 },
+        spacing: { after: 60 },
+      }));
+    } else if (/^\d+\.\s/.test(line)) {
+      const num = line.match(/^(\d+)/)[1];
+      const content = line.replace(/^\d+\.\s/, '');
+      paragraphs.push(new Paragraph({
+        children: [
+          new TextRun({ text: `${num}.\t`, size: 24, bold: true }),
+          ...parseInlineRuns(content),
+        ],
+        indent: { left: 360, hanging: 360 },
+        spacing: { after: 60 },
+      }));
+    } else if (line.trim() === '') {
+      paragraphs.push(new Paragraph({ spacing: { after: 80 } }));
+    } else {
+      paragraphs.push(new Paragraph({
+        children: parseInlineRuns(line),
+        spacing: { after: 80 },
+      }));
+    }
+  }
+  return paragraphs;
+}
+
 export async function exportOSPtoWord(profile, lang = 'en') {
   const isEs = lang === 'es';
 
@@ -80,23 +161,23 @@ export async function exportOSPtoWord(profile, lang = 'en') {
 
         // Section 3: Organic Practices
         heading(isEs ? '3. PRÁCTICAS DE PRODUCCIÓN ORGÁNICA' : '3. ORGANIC PRODUCTION PRACTICES'),
-        body(profile.practices),
+        ...markdownToDocxParagraphs(profile.practices),
         divider(),
 
         // Section 4: Inputs
         heading(isEs ? '4. INSUMOS Y SUSTANCIAS' : '4. INPUTS & SUBSTANCES'),
-        body(profile.inputs),
+        ...markdownToDocxParagraphs(profile.inputs),
         divider(),
 
         // Section 5: Monitoring
         heading(isEs ? '5. MONITOREO Y MANTENIMIENTO DE REGISTROS' : '5. MONITORING & RECORDKEEPING'),
-        body(profile.monitoring),
+        ...markdownToDocxParagraphs(profile.monitoring),
         body(isEs ? 'Nota: Todos los registros deben mantenerse durante al menos 5 años.' : 'Note: All records must be maintained for a minimum of 5 years.'),
         divider(),
 
         // Section 6: Buffers
         heading(isEs ? '6. BARRERAS FÍSICAS Y PREVENCIÓN DE CONTAMINACIÓN' : '6. PHYSICAL BUFFERS & CONTAMINATION PREVENTION'),
-        body(profile.buffers),
+        ...markdownToDocxParagraphs(profile.buffers),
         divider(),
 
         // Section 7: Certifier
@@ -119,7 +200,7 @@ export async function exportOSPtoWord(profile, lang = 'en') {
         ...(profile.registrationNotes ? [
           divider(),
           heading(isEs ? '9. NOTAS ADICIONALES' : '9. ADDITIONAL NOTES'),
-          body(profile.registrationNotes),
+          ...markdownToDocxParagraphs(profile.registrationNotes),
         ] : []),
       ],
     }],
