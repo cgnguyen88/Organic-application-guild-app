@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, CheckCircle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, CheckCircle, ChevronDown, Pencil } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import t from '../data/translations.js';
 import certifiers from '../data/certifiers.js';
@@ -433,40 +433,147 @@ function Step2({ formData, update, tx }) {
   );
 }
 
+function renderOSPMarkdown(text) {
+  if (!text) return null;
+  const lines = text.split('\n');
+  const elements = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // H2 / H3 headers
+    if (/^###\s/.test(line)) {
+      elements.push(<h4 key={i} style={{ fontSize: 13, fontWeight: 700, color: 'var(--u-navy)', marginTop: 14, marginBottom: 4 }}>{line.replace(/^###\s/, '')}</h4>);
+    } else if (/^##\s/.test(line)) {
+      elements.push(<h3 key={i} style={{ fontSize: 14, fontWeight: 700, color: 'var(--u-navy)', marginTop: 16, marginBottom: 4 }}>{line.replace(/^##\s/, '')}</h3>);
+    } else if (/^#\s/.test(line)) {
+      elements.push(<h3 key={i} style={{ fontSize: 15, fontWeight: 700, color: 'var(--u-navy)', marginTop: 16, marginBottom: 4 }}>{line.replace(/^#\s/, '')}</h3>);
+    // Numbered list items
+    } else if (/^\d+\.\s/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
+        items.push(<li key={i} style={{ marginBottom: 4 }}>{formatInline(lines[i].replace(/^\d+\.\s/, ''))}</li>);
+        i++;
+      }
+      elements.push(<ol key={`ol-${i}`} style={{ paddingLeft: 20, margin: '6px 0', lineHeight: 1.7 }}>{items}</ol>);
+      continue;
+    // Bullet list items (-, *, •)
+    } else if (/^[-*•]\s/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^[-*•]\s/.test(lines[i])) {
+        items.push(<li key={i} style={{ marginBottom: 4 }}>{formatInline(lines[i].replace(/^[-*•]\s/, ''))}</li>);
+        i++;
+      }
+      elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: 20, margin: '6px 0', lineHeight: 1.7 }}>{items}</ul>);
+      continue;
+    // Blank line → spacer
+    } else if (line.trim() === '') {
+      elements.push(<div key={i} style={{ height: 6 }} />);
+    // Regular paragraph
+    } else {
+      elements.push(<p key={i} style={{ margin: '4px 0', lineHeight: 1.7 }}>{formatInline(line)}</p>);
+    }
+    i++;
+  }
+  return elements;
+}
+
+function formatInline(text) {
+  // Split on **bold** and *italic* markers and return mixed array
+  const parts = [];
+  const regex = /(\*\*.*?\*\*|\*.*?\*)/g;
+  let last = 0;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    const raw = match[0];
+    if (raw.startsWith('**')) {
+      parts.push(<strong key={match.index}>{raw.slice(2, -2)}</strong>);
+    } else {
+      parts.push(<em key={match.index}>{raw.slice(1, -1)}</em>);
+    }
+    last = match.index + raw.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length ? parts : text;
+}
+
 function Step3({ formData, update, tx, isGenerating, generateSuggestion }) {
   const f = tx.fields;
   const aiFields = ['practices', 'inputs', 'monitoring', 'buffers'];
+  const [editingField, setEditingField] = useState(null);
 
   return (
     <div>
-      {aiFields.map(field => (
-        <div key={field} style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--u-navy)' }}>{f[field]}</label>
-            <button
-              onClick={() => generateSuggestion(field)}
-              disabled={isGenerating}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '5px 12px', borderRadius: 6,
-                border: '1.5px solid var(--u-sky)', background: 'white',
-                color: 'var(--u-sky)', fontSize: 12, fontWeight: 600,
-                cursor: isGenerating ? 'not-allowed' : 'pointer',
-                opacity: isGenerating ? 0.6 : 1,
-              }}
-            >
-              <Sparkles size={12} />
-              {isGenerating ? tx.generating : tx.generateSuggestion}
-            </button>
+      {aiFields.map(field => {
+        const hasContent = !!formData[field];
+        const isEditMode = editingField === field;
+        const isThisGenerating = isGenerating;
+
+        return (
+          <div key={field} style={{ marginBottom: 28 }}>
+            {/* Label row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--u-navy)' }}>{f[field]}</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {hasContent && !isThisGenerating && (
+                  <button
+                    onClick={() => setEditingField(isEditMode ? null : field)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '5px 10px', borderRadius: 6,
+                      border: '1.5px solid #e2e8f0', background: isEditMode ? '#f1f5f9' : 'white',
+                      color: '#64748b', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    }}
+                  >
+                    <Pencil size={11} />
+                    {isEditMode ? 'Done' : 'Edit'}
+                  </button>
+                )}
+                <button
+                  onClick={() => { generateSuggestion(field); setEditingField(null); }}
+                  disabled={isThisGenerating}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '5px 12px', borderRadius: 6,
+                    border: '1.5px solid var(--u-sky)', background: 'white',
+                    color: 'var(--u-sky)', fontSize: 12, fontWeight: 600,
+                    cursor: isThisGenerating ? 'not-allowed' : 'pointer',
+                    opacity: isThisGenerating ? 0.6 : 1,
+                  }}
+                >
+                  <Sparkles size={12} />
+                  {isThisGenerating ? tx.generating : tx.generateSuggestion}
+                </button>
+              </div>
+            </div>
+
+            {/* Rendered markdown view */}
+            {hasContent && !isEditMode && (
+              <div style={{
+                background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 10,
+                padding: '14px 18px', fontSize: 13, color: '#374151', lineHeight: 1.7,
+                minHeight: 80,
+              }}>
+                {renderOSPMarkdown(formData[field])}
+                {isThisGenerating && (
+                  <span style={{ display: 'inline-block', width: 8, height: 14, background: 'var(--u-sky)', borderRadius: 2, marginLeft: 2, animation: 'blink 0.8s step-end infinite' }} />
+                )}
+              </div>
+            )}
+
+            {/* Textarea for editing or empty state */}
+            {(!hasContent || isEditMode) && (
+              <textarea
+                style={{ ...textareaStyle, ...(isEditMode ? { borderColor: 'var(--u-sky)' } : {}) }}
+                value={formData[field]}
+                onChange={e => update(field, e.target.value)}
+                placeholder={`${tx.generateSuggestion} ↑ or write your own...`}
+              />
+            )}
           </div>
-          <textarea
-            style={textareaStyle}
-            value={formData[field]}
-            onChange={e => update(field, e.target.value)}
-            placeholder={`${tx.generateSuggestion} ↑ or write your own...`}
-          />
-        </div>
-      ))}
+        );
+      })}
+      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
     </div>
   );
 }
