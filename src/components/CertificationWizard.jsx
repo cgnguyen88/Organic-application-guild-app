@@ -84,7 +84,6 @@ export default function CertificationWizard({ profile, onUpdateProfile, onNaviga
   const goNext = () => {
     const nextStep = step + 1;
     setStep(nextStep);
-    setAiText('');
     const progress = { step: nextStep, data: formData };
     saveToStorage('orgpath_wizard_progress', progress);
     debouncedSync(userId, 'wizard_progress', progress);
@@ -93,7 +92,6 @@ export default function CertificationWizard({ profile, onUpdateProfile, onNaviga
   const goBack = () => {
     const prevStep = step - 1;
     setStep(prevStep);
-    setAiText('');
     const progress = { step: prevStep, data: formData };
     saveToStorage('orgpath_wizard_progress', progress);
     debouncedSync(userId, 'wizard_progress', progress);
