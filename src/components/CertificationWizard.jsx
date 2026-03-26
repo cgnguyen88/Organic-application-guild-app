@@ -10,13 +10,14 @@ import { debouncedSync } from '../lib/db.js';
 
 const STEP_COLORS = ['#3AA8E4', '#FDBD10', '#1B6B2E', '#005FAE', '#7c3aed', '#bd8e00', '#002D54'];
 
-async function streamClaude(messages, onChunk) {
+async function streamClaude(messages, onChunk, system) {
   try {
     const res = await fetch('/api/claude', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, stream: true }),
+      body: JSON.stringify({ messages, system, stream: true }),
     });
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
@@ -124,11 +125,12 @@ Operation: ${formData.operationName || 'Unknown'}, Type: ${formData.operationTyp
     };
 
     await streamClaude(
-      [{ role: 'system', content: sysPrompt }, { role: 'user', content: prompts[field] || 'Provide a helpful suggestion.' }],
+      [{ role: 'user', content: prompts[field] || 'Provide a helpful suggestion.' }],
       (chunk) => {
         aiTextRef.current += chunk;
         setAiText(aiTextRef.current);
-      }
+      },
+      sysPrompt
     );
     update(field, aiTextRef.current);
     setIsGenerating(false);
