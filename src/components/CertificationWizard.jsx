@@ -70,7 +70,6 @@ export default function CertificationWizard({ profile, onUpdateProfile, onNaviga
     };
   });
 
-  const [aiText, setAiText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const aiTextRef = useRef('');
 
@@ -110,7 +109,6 @@ export default function CertificationWizard({ profile, onUpdateProfile, onNaviga
   const generateSuggestion = async (field) => {
     if (isGenerating) return;
     setIsGenerating(true);
-    setAiText('');
     aiTextRef.current = '';
 
     const sysPrompt = `You are Jimmy, a California organic certification expert. The user is completing their Organic System Plan. Based on their operation, provide a practical, concise suggestion in ${lang === 'es' ? 'Spanish' : 'English'}.
@@ -124,15 +122,28 @@ Operation: ${formData.operationName || 'Unknown'}, Type: ${formData.operationTyp
       buffers: `Suggest physical buffer methods to prevent contamination from non-organic neighboring land for this California operation.`,
     };
 
+    // Clear the field so the user sees text arriving live
+    setFormData(prev => ({ ...prev, [field]: '' }));
+
     await streamClaude(
       [{ role: 'user', content: prompts[field] || 'Provide a helpful suggestion.' }],
       (chunk) => {
         aiTextRef.current += chunk;
-        setAiText(aiTextRef.current);
+        // Update textarea in real-time so user sees streaming output
+        setFormData(prev => ({ ...prev, [field]: aiTextRef.current }));
       },
       sysPrompt
     );
-    update(field, aiTextRef.current);
+
+    // Persist final value to localStorage + Supabase using latest state
+    setFormData(prev => {
+      const next = { ...prev, [field]: aiTextRef.current };
+      const progress = { step, data: next };
+      saveToStorage('orgpath_wizard_progress', progress);
+      debouncedSync(userId, 'wizard_progress', progress);
+      return next;
+    });
+
     setIsGenerating(false);
   };
 
@@ -197,9 +208,9 @@ Operation: ${formData.operationName || 'Unknown'}, Type: ${formData.operationTyp
             {step === 0 && <Step0 formData={formData} update={update} tx={tx} lang={lang} />}
             {step === 1 && <Step1 formData={formData} update={update} tx={tx} lang={lang} estFee={estFee} />}
             {step === 2 && <Step2 formData={formData} update={update} tx={tx} />}
-            {step === 3 && <Step3 formData={formData} update={update} tx={tx} aiText={aiText} isGenerating={isGenerating} generateSuggestion={generateSuggestion} />}
+            {step === 3 && <Step3 formData={formData} update={update} tx={tx} isGenerating={isGenerating} generateSuggestion={generateSuggestion} />}
             {step === 4 && <Step4 formData={formData} update={update} lang={lang} />}
-            {step === 5 && <Step5 formData={formData} update={update} tx={tx} lang={lang} />}
+            {step === 5 && <Step5 formData={formData} update={update} lang={lang} />}
             {step === 6 && <Step6 formData={formData} update={update} tx={tx} lang={lang} estFee={estFee} />}
           </div>
         </motion.div>
@@ -424,7 +435,7 @@ function Step2({ formData, update, tx }) {
   );
 }
 
-function Step3({ formData, update, tx, aiText, isGenerating, generateSuggestion }) {
+function Step3({ formData, update, tx, isGenerating, generateSuggestion }) {
   const f = tx.fields;
   const aiFields = ['practices', 'inputs', 'monitoring', 'buffers'];
 
@@ -518,8 +529,7 @@ function Step4({ formData, update, lang }) {
   );
 }
 
-function Step5({ formData, update, tx, lang }) {
-  const f = tx.fields;
+function Step5({ formData, update, lang }) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginBottom: 24 }}>
