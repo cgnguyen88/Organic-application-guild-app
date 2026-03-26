@@ -88,6 +88,17 @@ export default function ExpandableChat({ profile }) {
   const tx = t[lang].chat;
 
   const [open, setOpen] = useState(false);
+
+  // Auto-open after 2 seconds on first visit
+  useEffect(() => {
+    const alreadySeen = sessionStorage.getItem('jimmy_opened');
+    if (alreadySeen) return;
+    const timer = setTimeout(() => {
+      setOpen(true);
+      sessionStorage.setItem('jimmy_opened', '1');
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: tx.welcome }
   ]);
