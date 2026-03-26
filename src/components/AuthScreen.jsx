@@ -43,10 +43,17 @@ export default function AuthScreen({ onLogin }) {
       }
     } catch (err) {
       const msg = err.message || 'Something went wrong. Please try again.';
-      if (msg.includes('already registered')) setError('An account with this email already exists.');
-      else if (msg.includes('Invalid login')) setError('Invalid email or password.');
-      else if (msg.includes('Password should')) setError('Password must be at least 6 characters.');
-      else setError(msg);
+      if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
+        setError('Cannot connect to the server. If you are the site owner, please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your Vercel environment variables and redeploy.');
+      } else if (msg.includes('already registered')) {
+        setError('An account with this email already exists.');
+      } else if (msg.includes('Invalid login')) {
+        setError('Invalid email or password.');
+      } else if (msg.includes('Password should')) {
+        setError('Password must be at least 6 characters.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
