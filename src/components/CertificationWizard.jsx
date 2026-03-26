@@ -133,12 +133,14 @@ Operation: ${formData.operationName || 'Unknown'}, Type: ${formData.operationTyp
       sysPrompt
     );
 
-    // Persist final value to localStorage + Supabase using latest state
+    // Persist final value and sync to operation_data so OSP Generator
+    // sees the new content immediately (not only after Finish is clicked)
     setFormData(prev => {
       const next = { ...prev, [field]: aiTextRef.current };
       const progress = { step, data: next };
       saveToStorage('orgpath_wizard_progress', progress);
       debouncedSync(userId, 'wizard_progress', progress);
+      onUpdateProfile(next);
       return next;
     });
 
