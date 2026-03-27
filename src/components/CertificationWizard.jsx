@@ -81,6 +81,15 @@ export default function CertificationWizard({ profile, onUpdateProfile, onNaviga
     debouncedSync(userId, 'wizard_progress', progress);
   };
 
+  // Batch-update multiple fields in one setFormData call so none overwrite each other
+  const updateMany = (fields) => {
+    const next = { ...formData, ...fields };
+    setFormData(next);
+    const progress = { step, data: next };
+    saveToStorage('orgpath_wizard_progress', progress);
+    debouncedSync(userId, 'wizard_progress', progress);
+  };
+
   const goNext = () => {
     const nextStep = step + 1;
     setStep(nextStep);
@@ -210,7 +219,7 @@ Operation: ${formData.operationName || 'Unknown'}, Type: ${formData.operationTyp
             {step === 2 && <Step2 formData={formData} update={update} tx={tx} />}
             {step === 3 && <Step3 formData={formData} update={update} tx={tx} isGenerating={isGenerating} generateSuggestion={generateSuggestion} />}
             {step === 4 && <Step4 formData={formData} update={update} lang={lang} />}
-            {step === 5 && <Step5 formData={formData} update={update} lang={lang} />}
+            {step === 5 && <Step5 formData={formData} update={update} updateMany={updateMany} lang={lang} />}
             {step === 6 && <Step6 formData={formData} update={update} tx={tx} lang={lang} estFee={estFee} />}
           </div>
         </motion.div>
@@ -636,7 +645,7 @@ function Step4({ formData, update, lang }) {
   );
 }
 
-function Step5({ formData, update, lang }) {
+function Step5({ formData, update, updateMany, lang }) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginBottom: 24 }}>
@@ -645,11 +654,11 @@ function Step5({ formData, update, lang }) {
           return (
             <motion.div
               key={c.id}
-              onClick={() => {
-                update('certifierId', c.id);
-                update('certifierName', c.name);
-                update('certifierContact', `${c.phone} | ${c.website}`);
-              }}
+              onClick={() => updateMany({
+                certifierId: c.id,
+                certifierName: c.name,
+                certifierContact: `${c.phone} | ${c.website}`,
+              })}
               whileHover={{ scale: selected ? 1 : 1.01 }}
               style={{
                 padding: '16px', borderRadius: 10, marginBottom: 12, cursor: 'pointer',
