@@ -640,30 +640,56 @@ function Step5({ formData, update, lang }) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginBottom: 24 }}>
-        {certifiers.map(c => (
-          <motion.div
-            key={c.id}
-            onClick={() => update('certifierId', c.id) || update('certifierName', c.name) || update('certifierContact', `${c.phone} | ${c.website}`)}
-            whileHover={{ scale: 1.01 }}
-            style={{
-              padding: '16px', borderRadius: 10, marginBottom: 12, cursor: 'pointer',
-              border: formData.certifierId === c.id ? '2px solid var(--u-navy)' : '2px solid #e2e8f0',
-              background: formData.certifierId === c.id ? 'rgba(0,45,84,0.04)' : 'white',
-              transition: 'all 0.15s',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-              <p style={{ fontWeight: 600, fontSize: 13, color: 'var(--u-navy)', flex: 1, paddingRight: 8 }}>{c.name}</p>
-              {formData.certifierId === c.id && <CheckCircle size={16} color="var(--u-navy)" />}
-            </div>
-            <p style={{ fontSize: 11, color: '#64748b', marginBottom: 4 }}>{c.location}</p>
-            <p style={{ fontSize: 11, color: '#94a3b8' }}>{c.notes}</p>
-            <a href={c.website} target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 11, color: 'var(--u-sky)', textDecoration: 'none' }}
-              onClick={e => e.stopPropagation()}
-            >{c.website}</a>
-          </motion.div>
-        ))}
+        {certifiers.map(c => {
+          const selected = formData.certifierId === c.id;
+          return (
+            <motion.div
+              key={c.id}
+              onClick={() => {
+                update('certifierId', c.id);
+                update('certifierName', c.name);
+                update('certifierContact', `${c.phone} | ${c.website}`);
+              }}
+              whileHover={{ scale: selected ? 1 : 1.01 }}
+              style={{
+                padding: '16px', borderRadius: 10, marginBottom: 12, cursor: 'pointer',
+                border: selected ? '2px solid var(--u-navy)' : '2px solid #e2e8f0',
+                background: selected ? 'rgba(0,45,84,0.07)' : 'white',
+                boxShadow: selected
+                  ? '0 0 0 3px rgba(0,45,84,0.12), 0 4px 12px rgba(0,45,84,0.1)'
+                  : '0 1px 3px rgba(0,0,0,0.04)',
+                transition: 'all 0.18s',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Selected accent bar */}
+              {selected && (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0,
+                  height: 3, background: 'var(--u-navy)', borderRadius: '10px 10px 0 0',
+                }} />
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4, marginTop: selected ? 4 : 0 }}>
+                <p style={{ fontWeight: 700, fontSize: 13, color: selected ? 'var(--u-navy)' : '#1e293b', flex: 1, paddingRight: 8 }}>{c.name}</p>
+                {selected && (
+                  <div style={{
+                    background: 'var(--u-navy)', borderRadius: '50%',
+                    width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <CheckCircle size={13} color="white" />
+                  </div>
+                )}
+              </div>
+              <p style={{ fontSize: 11, color: selected ? '#475569' : '#64748b', marginBottom: 4 }}>{c.location}</p>
+              <p style={{ fontSize: 11, color: '#94a3b8' }}>{c.notes}</p>
+              <a href={c.website} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, color: 'var(--u-sky)', textDecoration: 'none' }}
+                onClick={e => e.stopPropagation()}
+              >{c.website}</a>
+            </motion.div>
+          );
+        })}
       </div>
 
       <FormField label={lang === 'en' ? 'Additional certifier notes' : 'Notas adicionales del certificador'}>
