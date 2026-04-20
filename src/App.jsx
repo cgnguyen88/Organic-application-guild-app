@@ -13,14 +13,21 @@ import ExpandableChat from './components/ExpandableChat.jsx';
 import RecordGenerators from './components/RecordGenerators.jsx';
 import ReceiptManager from './components/ReceiptManager.jsx';
 import CertifierDirectory from './components/CertifierDirectory.jsx';
+import SoilLabDirectory from './components/SoilLabDirectory.jsx';
 import StateRegistration from './components/StateRegistration.jsx';
 import OCCSPAssistant from './components/OCCSPAssistant.jsx';
+import CertificationStatusGate from './components/CertificationStatusGate.jsx';
+import MaintenanceModule from './components/MaintenanceModule.jsx';
+import OMRIGuide from './components/OMRIGuide.jsx';
+import FoodSafetyGuide from './components/FoodSafetyGuide.jsx';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [activePage, setActivePage] = useState('dashboard');
   const [profile, setProfile] = useState({});
   const [authLoading, setAuthLoading] = useState(true);
+  // True when a brand-new signup just completed — always show the gate
+  const [forceGate, setForceGate] = useState(false);
 
   // On mount: restore session from Supabase
   useEffect(() => {
@@ -66,6 +73,7 @@ export default function App() {
 
   const handleLogin = (u) => {
     setUser(u);
+    if (u.isNew) setForceGate(true);
     if (u.id) loadUserProfile(u.id);
   };
 
@@ -97,6 +105,20 @@ export default function App() {
 
   if (!user) return <AuthScreen onLogin={handleLogin} />;
 
+  const handleStatusSelect = (status) => {
+    setForceGate(false);
+    updateProfile({ certificationStatus: status });
+    if (status === 'certified') {
+      setActivePage('maintenance');
+    } else {
+      setActivePage('dashboard');
+    }
+  };
+
+  if (forceGate || !profile.certificationStatus) {
+    return <CertificationStatusGate onSelect={handleStatusSelect} />;
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar
@@ -104,10 +126,12 @@ export default function App() {
         onNavigate={setActivePage}
         user={user}
         onLogout={handleLogout}
+        certificationStatus={profile.certificationStatus}
       />
 
       <main style={{ flex: 1, overflowY: 'auto', background: 'var(--cream)', position: 'relative' }}>
         {activePage === 'dashboard' && <Dashboard user={user} onNavigate={setActivePage} profile={profile} />}
+        {activePage === 'maintenance' && <MaintenanceModule profile={profile} userId={user?.id} />}
         {activePage === 'eligibility' && <EligibilityChecker onNavigate={setActivePage} onUpdateProfile={updateProfile} />}
         {activePage === 'wizard' && <CertificationWizard profile={profile} onUpdateProfile={updateProfile} onNavigate={setActivePage} userId={user?.id} />}
         {activePage === 'tracker' && <ComplianceTracker userId={user?.id} />}
@@ -115,8 +139,11 @@ export default function App() {
         {activePage === 'records' && <RecordGenerators profile={profile} />}
         {activePage === 'receipts' && <ReceiptManager userId={user?.id} />}
         {activePage === 'certifiers' && <CertifierDirectory />}
+        {activePage === 'soilLabs' && <SoilLabDirectory />}
         {activePage === 'stateReg' && <StateRegistration userId={user?.id} />}
         {activePage === 'occsp' && <OCCSPAssistant profile={profile} userId={user?.id} />}
+        {activePage === 'omriGuide' && <OMRIGuide />}
+        {activePage === 'foodSafety' && <FoodSafetyGuide />}
       </main>
 
       <ExpandableChat profile={profile} />

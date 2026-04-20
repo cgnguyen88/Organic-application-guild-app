@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, ChevronDown, Sparkles } from 'lucide-react';
+import { X, Send, ChevronDown, Carrot } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import t from '../data/translations.js';
 
@@ -167,16 +167,21 @@ export default function ExpandableChat({ profile }) {
       {/* Floating toggle button */}
       <motion.button
         onClick={() => setOpen(o => !o)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.08, rotate: open ? 0 : -8 }}
+        whileTap={{ scale: 0.93 }}
         style={{
           position: 'fixed', bottom: 28, right: 28, zIndex: 999,
-          width: 56, height: 56, borderRadius: '50%',
-          background: open ? '#374151' : 'var(--u-navy)',
+          width: 58, height: 58, borderRadius: '50%',
+          background: open
+            ? 'linear-gradient(135deg, #374151, #1f2937)'
+            : 'linear-gradient(135deg, #f97316, #ea580c)',
           border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 20px rgba(0,45,84,0.35)',
+          boxShadow: open
+            ? '0 4px 20px rgba(0,0,0,0.3)'
+            : '0 4px 20px rgba(249,115,22,0.5), 0 0 0 3px rgba(249,115,22,0.15)',
           color: 'white',
+          transition: 'background 0.2s, box-shadow 0.2s',
         }}
         className="no-print"
       >
@@ -188,7 +193,7 @@ export default function ExpandableChat({ profile }) {
             exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
             transition={{ duration: 0.15 }}
           >
-            {open ? <X size={22} /> : <MessageCircle size={22} />}
+            {open ? <X size={22} /> : <Carrot size={24} strokeWidth={2} />}
           </motion.div>
         </AnimatePresence>
       </motion.button>
@@ -221,11 +226,12 @@ export default function ExpandableChat({ profile }) {
             }}>
               <div style={{
                 width: 36, height: 36, borderRadius: '50%',
-                background: 'var(--u-gold)',
+                background: 'linear-gradient(135deg, #f97316, #ea580c)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
+                boxShadow: '0 2px 10px rgba(249,115,22,0.45)',
               }}>
-                <Sparkles size={18} color="var(--u-navy)" />
+                <Carrot size={18} color="white" strokeWidth={2} />
               </div>
               <div>
                 <p style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>{tx.name}</p>

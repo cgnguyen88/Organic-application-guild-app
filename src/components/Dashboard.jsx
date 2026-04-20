@@ -9,16 +9,24 @@ const HERO_IMAGES = [
   'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=80',
 ];
 
-const FEATURES = [
-  { id: 'eligibility', icon: ClipboardCheck, color: '#3AA8E4', accent: '#e5f4fd' },
-  { id: 'wizard',      icon: Wand2,          color: '#1B6B2E', accent: '#e8f5e9' },
-  { id: 'tracker',     icon: ListChecks,     color: '#002D54', accent: '#e5f0fa' },
-  { id: 'osp',         icon: FileText,       color: '#FDBD10', accent: '#fff8e1', textColor: '#bd8e00' },
-];
+import { ShieldCheck, Footprints } from 'lucide-react';
 
 export default function Dashboard({ user, onNavigate, profile }) {
   const { lang } = useLanguage();
   const tx = t[lang].dashboard;
+
+  const FEATURES = [
+    ...(profile?.certificationStatus === 'certified'
+      ? [
+          { id: 'maintenance', icon: ShieldCheck, color: '#1B6B2E', accent: '#e8f5e9' },
+          { id: 'tracker',     icon: ListChecks,  color: '#002D54', accent: '#e5f0fa' },
+        ]
+      : [
+          { id: 'wizard',      icon: Wand2,          color: '#1B6B2E', accent: '#e8f5e9' },
+          { id: 'eligibility', icon: ClipboardCheck, color: '#3AA8E4', accent: '#e5f4fd' },
+        ]),
+    { id: 'osp',         icon: FileText,       color: '#FDBD10', accent: '#fff8e1', textColor: '#bd8e00' },
+  ];
 
   const hasProfile = profile && profile.operationName;
 
