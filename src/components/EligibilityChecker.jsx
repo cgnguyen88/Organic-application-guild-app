@@ -204,9 +204,9 @@ function ResultCard({ result, tx, lang, onRestart, onNavigate }) {
   const isCDPH = result.type === 'CDPH';
   const isBoth = result.type === 'both';
 
-  const titleKey = isExempt ? 'resultExempt' : isNone ? 'resultExempt' :
+  const titleKey = isNone ? 'resultNone' : isExempt ? 'resultExempt' :
     isCDFA ? 'resultCDFA' : isCDPH ? 'resultCDPH' : 'resultBoth';
-  const descKey = isExempt ? 'resultExemptDesc' : isNone ? 'resultExemptDesc' :
+  const descKey = isNone ? 'resultNoneDesc' : isExempt ? 'resultExemptDesc' :
     isCDFA ? 'resultCDFADesc' : isCDPH ? 'resultCDPHDesc' : 'resultBothDesc';
 
   return (
