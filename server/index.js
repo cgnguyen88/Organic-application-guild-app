@@ -12,7 +12,7 @@ dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '20mb' }));
 
 // Proxy to Anthropic API
 app.post('/api/claude', async (req, res) => {

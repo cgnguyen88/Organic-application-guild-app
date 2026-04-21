@@ -6,7 +6,6 @@ import AuthScreen from './components/AuthScreen.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import EligibilityChecker from './components/EligibilityChecker.jsx';
-import CertificationWizard from './components/CertificationWizard.jsx';
 import ComplianceTracker from './components/ComplianceTracker.jsx';
 import OSPGenerator from './components/OSPGenerator.jsx';
 import ExpandableChat from './components/ExpandableChat.jsx';
@@ -20,6 +19,7 @@ import CertificationStatusGate from './components/CertificationStatusGate.jsx';
 import MaintenanceModule from './components/MaintenanceModule.jsx';
 import OMRIGuide from './components/OMRIGuide.jsx';
 import FoodSafetyGuide from './components/FoodSafetyGuide.jsx';
+import FederalCodeGuide from './components/FederalCodeGuide.jsx';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -127,15 +127,19 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         certificationStatus={profile.certificationStatus}
+        onChangeStatus={() => setForceGate(true)}
+        onSetStatus={(status) => {
+          updateProfile({ certificationStatus: status });
+          setActivePage(status === 'certified' ? 'maintenance' : 'dashboard');
+        }}
       />
 
       <main style={{ flex: 1, overflowY: 'auto', background: 'var(--cream)', position: 'relative' }}>
         {activePage === 'dashboard' && <Dashboard user={user} onNavigate={setActivePage} profile={profile} />}
         {activePage === 'maintenance' && <MaintenanceModule profile={profile} userId={user?.id} />}
         {activePage === 'eligibility' && <EligibilityChecker onNavigate={setActivePage} onUpdateProfile={updateProfile} />}
-        {activePage === 'wizard' && <CertificationWizard profile={profile} onUpdateProfile={updateProfile} onNavigate={setActivePage} userId={user?.id} />}
-        {activePage === 'tracker' && <ComplianceTracker userId={user?.id} />}
-        {activePage === 'osp' && <OSPGenerator profile={profile} onNavigate={setActivePage} />}
+        {activePage === 'tracker' && <ComplianceTracker userId={user?.id} certificationStatus={profile.certificationStatus} />}
+        {activePage === 'osp' && <OSPGenerator profile={profile} onUpdateProfile={updateProfile} onNavigate={setActivePage} userId={user?.id} />}
         {activePage === 'records' && <RecordGenerators profile={profile} />}
         {activePage === 'receipts' && <ReceiptManager userId={user?.id} />}
         {activePage === 'certifiers' && <CertifierDirectory />}
@@ -144,6 +148,7 @@ export default function App() {
         {activePage === 'occsp' && <OCCSPAssistant profile={profile} userId={user?.id} />}
         {activePage === 'omriGuide' && <OMRIGuide />}
         {activePage === 'foodSafety' && <FoodSafetyGuide />}
+        {activePage === 'federalCode' && <FederalCodeGuide />}
       </main>
 
       <ExpandableChat profile={profile} />

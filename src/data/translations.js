@@ -18,6 +18,7 @@ const t = {
       soilLabs: 'Soil Lab Directory',
       omriGuide: 'OMRI Materials Guide',
       foodSafety: 'Food Safety Guide',
+      federalCode: 'Federal Organic Code',
       stateReg: 'State Registration',
       occsp: 'OCCSP Reimbursement',
     },
@@ -188,10 +189,10 @@ const t = {
     // Chat
     chat: {
       name: 'Jimmy',
-      tagline: 'CA Organic Certification Assistant',
-      placeholder: 'Ask me anything about organic certification...',
-      chips: ['Am I exempt?', 'CDFA or CDPH?', 'Estimate my fees', "What's an OSP?", 'Prohibited substances'],
-      welcome: 'Hi! I\'m Jimmy, your California organic certification guide. I can help you understand CDFA/CDPH requirements, fee schedules, the application process, and more. What would you like to know?',
+      tagline: 'YOUR ORGANIC CERTIFICATION GUIDE',
+      placeholder: 'Ask me anything...',
+      chips: ['Explain OSP', 'Eligibility check', 'What is OMRI list?', 'Certification fee', 'Prohibited substances'],
+      welcome: "🍓 Hey there! I'm Jimmy, your OrganicPath guide. I can help you with your Organic System Plan (OSP), eligibility checks, OMRI material verification, and more. What can I help you with today?",
     },
     // General
     general: {
@@ -379,6 +380,7 @@ const t = {
       soilLabs: 'Directorio de Laboratorios de Suelos',
       omriGuide: 'Guía de Materiales OMRI',
       foodSafety: 'Guía de Inocuidad Alimentaria',
+      federalCode: 'Código Orgánico Federal',
       stateReg: 'Registro Estatal',
       occsp: 'Reembolso OCCSP',
     },
@@ -542,10 +544,10 @@ const t = {
     },
     chat: {
       name: 'Jimmy',
-      tagline: 'Asistente de Certificación Orgánica CA',
-      placeholder: 'Pregúntame sobre la certificación orgánica...',
-      chips: ['¿Estoy exento?', '¿CDFA o CDPH?', 'Estimar mis cuotas', '¿Qué es un OSP?', 'Sustancias prohibidas'],
-      welcome: '¡Hola! Soy Jimmy, tu guía de certificación orgánica de California. Puedo ayudarte a entender los requisitos de CDFA/CDPH, las cuotas, el proceso de solicitud y mucho más. ¿Qué deseas saber?',
+      tagline: 'TU GUÍA DE CERTIFICACIÓN ORGÁNICA',
+      placeholder: 'Pregúntame lo que sea...',
+      chips: ['Explicar OSP', 'Verificar elegibilidad', '¿Qué es la lista OMRI?', 'Cuota de certificación', 'Sustancias prohibidas'],
+      welcome: '🍓 ¡Hola! Soy Jimmy, tu guía de OrganicPath. Puedo ayudarte con tu Plan de Sistema Orgánico (OSP), verificaciones de elegibilidad, verificación de materiales OMRI y más. ¿En qué puedo ayudarte hoy?',
     },
     general: {
       loading: 'Cargando...',

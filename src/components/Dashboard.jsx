@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ClipboardCheck, Wand2, ListChecks, FileText, ExternalLink, ArrowRight, Leaf } from 'lucide-react';
+import { ClipboardCheck, ListChecks, FileText, ExternalLink, ArrowRight, Leaf } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import t from '../data/translations.js';
 
@@ -22,7 +22,7 @@ export default function Dashboard({ user, onNavigate, profile }) {
           { id: 'tracker',     icon: ListChecks,  color: '#002D54', accent: '#e5f0fa' },
         ]
       : [
-          { id: 'wizard',      icon: Wand2,          color: '#1B6B2E', accent: '#e8f5e9' },
+          { id: 'osp',         icon: FileText,       color: '#1B6B2E', accent: '#e8f5e9' },
           { id: 'eligibility', icon: ClipboardCheck, color: '#3AA8E4', accent: '#e5f4fd' },
         ]),
     { id: 'osp',         icon: FileText,       color: '#FDBD10', accent: '#fff8e1', textColor: '#bd8e00' },

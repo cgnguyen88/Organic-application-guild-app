@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Circle, Info, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, Circle, Info, RotateCcw } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import t from '../data/translations.js';
 import complianceItems from '../data/compliance-items.js';
 import { saveToStorage, loadFromStorage } from '../utils/storage.js';
 import { getProfile, debouncedSync } from '../lib/db.js';
 
-const CATEGORY_ORDER = ['precert', 'documentation', 'certifier', 'stateReg', 'annual'];
+const CATEGORY_ORDER_PURSUING  = ['precert', 'documentation', 'certifier', 'stateReg', 'annual'];
+const CATEGORY_ORDER_CERTIFIED = ['stateReg', 'annual'];
 const CATEGORY_COLORS = {
   precert:       { color: '#3AA8E4', bg: '#e5f4fd', border: '#bae0f7' },
   documentation: { color: '#7c3aed', bg: '#f3f0ff', border: '#ddd6fe' },
@@ -16,12 +17,12 @@ const CATEGORY_COLORS = {
   annual:        { color: '#bd8e00', bg: '#fff8e1', border: '#fde68a' },
 };
 
-export default function ComplianceTracker({ userId }) {
+export default function ComplianceTracker({ userId, certificationStatus }) {
   const { lang } = useLanguage();
   const tx = t[lang].tracker;
 
   const [checked, setChecked] = useState(() => loadFromStorage('orgpath_compliance', {}));
-  const [expanded, setExpanded] = useState({ precert: true, documentation: true, certifier: true, stateReg: true, annual: true });
+  const CATEGORY_ORDER = certificationStatus === 'certified' ? CATEGORY_ORDER_CERTIFIED : CATEGORY_ORDER_PURSUING;
   const [tooltip, setTooltip] = useState(null);
 
   // Load from Supabase on mount
@@ -46,14 +47,13 @@ export default function ComplianceTracker({ userId }) {
       return next;
     });
   };
-  const toggleCategory = (cat) => setExpanded(prev => ({ ...prev, [cat]: !prev[cat] }));
-
-  const totalItems = complianceItems.length;
-  const checkedCount = Object.values(checked).filter(Boolean).length;
+const relevantItems = complianceItems.filter(item => CATEGORY_ORDER.includes(item.category));
+  const totalItems = relevantItems.length;
+  const checkedCount = relevantItems.filter(item => checked[item.id]).length;
   const progressPct = Math.round((checkedCount / totalItems) * 100);
 
   const byCategory = CATEGORY_ORDER.reduce((acc, cat) => {
-    acc[cat] = complianceItems.filter(item => item.category === cat);
+    acc[cat] = relevantItems.filter(item => item.category === cat);
     return acc;
   }, {});
 
@@ -131,7 +131,6 @@ export default function ComplianceTracker({ userId }) {
         const items = byCategory[cat];
         const catChecked = items.filter(item => checked[item.id]).length;
         const { color, bg, border } = CATEGORY_COLORS[cat];
-        const isExpanded = expanded[cat];
 
         return (
           <div key={cat} style={{
@@ -141,13 +140,10 @@ export default function ComplianceTracker({ userId }) {
             boxShadow: '0 2px 12px rgba(0,45,84,0.05)',
           }}>
             {/* Category header */}
-            <button
-              onClick={() => toggleCategory(cat)}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '18px 24px', background: bg, border: 'none', cursor: 'pointer',
-              }}
-            >
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '18px 24px', background: bg,
+            }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 8, height: 8, borderRadius: '50%', background: color,
@@ -164,13 +160,11 @@ export default function ComplianceTracker({ userId }) {
                   {catChecked} / {items.length}
                 </span>
               </div>
-              {isExpanded ? <ChevronUp size={18} color={color} /> : <ChevronDown size={18} color={color} />}
-            </button>
+            </div>
 
             {/* Items */}
-            {isExpanded && (
-              <div style={{ padding: '8px 0' }}>
-                {items.map((item, idx) => {
+            <div style={{ padding: '8px 0' }}>
+              {items.map((item, idx) => {
                   const isDone = checked[item.id];
                   const isTooltipOpen = tooltip === item.id;
 
@@ -247,8 +241,7 @@ export default function ComplianceTracker({ userId }) {
                     </motion.div>
                   );
                 })}
-              </div>
-            )}
+            </div>
           </div>
         );
       })}

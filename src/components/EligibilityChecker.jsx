@@ -286,7 +286,7 @@ function ResultCard({ result, tx, lang, onRestart, onNavigate }) {
           <div style={{ marginTop: 24, borderTop: '1px solid #f1f5f9', paddingTop: 24 }}>
             <p style={{ fontSize: 14, color: '#374151', marginBottom: 16, fontWeight: 600 }}>{tx.nextStep}</p>
             <button
-              onClick={() => onNavigate('wizard')}
+              onClick={() => onNavigate('osp')}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '12px 24px', borderRadius: 8,

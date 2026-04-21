@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Leaf, LayoutDashboard, ClipboardCheck, Wand2, ListChecks, FileText,
+  Leaf, LayoutDashboard, ClipboardCheck, ListChecks, FileText,
   LogOut, Languages, Microscope, Receipt, Users, ClipboardList, DollarSign,
-  ChevronDown, ShieldCheck, FlaskConical, BadgeCheck, ShieldHalf,
+  ShieldCheck, FlaskConical, BadgeCheck, ShieldHalf, Scale, Wrench,
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext.jsx';
 import t from '../data/translations.js';
@@ -22,11 +21,12 @@ const ITEM_COLORS = {
   soilLabs:    { from: '#84cc16', to: '#65a30d' },
   omriGuide:   { from: '#22c55e', to: '#16a34a' },
   foodSafety:  { from: '#ef4444', to: '#dc2626' },
+  federalCode: { from: '#1B6B2E', to: '#2d9a4a' },
   stateReg:    { from: '#6366f1', to: '#4f46e5' },
   occsp:       { from: '#eab308', to: '#ca8a04' },
 };
 
-export default function Sidebar({ activePage, onNavigate, user, onLogout, certificationStatus }) {
+export default function Sidebar({ activePage, onNavigate, user, onLogout, certificationStatus, onChangeStatus, onSetStatus }) {
   const { lang, toggleLang } = useLanguage();
   const tx = t[lang].nav;
 
@@ -34,27 +34,23 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, certif
     { id: 'dashboard',   icon: LayoutDashboard },
     ...(certificationStatus === 'certified'
       ? [{ id: 'maintenance', icon: ShieldCheck }]
-      : [{ id: 'wizard',      icon: Wand2 }]),
-    { id: 'tracker',     icon: ListChecks },
+      : []),
     { id: 'osp',         icon: FileText },
+    { id: 'tracker',     icon: ListChecks },
   ];
 
   const TOOLS_ITEMS = [
-    ...(certificationStatus === 'certified' ? [{ id: 'wizard', icon: Wand2 }] : []),
     { id: 'eligibility', icon: ClipboardCheck },
     { id: 'records',     icon: Microscope },
     { id: 'receipts',    icon: Receipt },
     { id: 'certifiers',  icon: Users },
     { id: 'soilLabs',    icon: FlaskConical },
-    { id: 'omriGuide',   icon: BadgeCheck },
-    { id: 'foodSafety',  icon: ShieldHalf },
+    { id: 'omriGuide',    icon: BadgeCheck },
+    { id: 'foodSafety',   icon: ShieldHalf },
+    { id: 'federalCode',  icon: Scale },
     { id: 'stateReg',    icon: ClipboardList },
     { id: 'occsp',       icon: DollarSign },
   ];
-
-  const [toolsOpen, setToolsOpen] = useState(
-    TOOLS_ITEMS.some(i => i.id === activePage)
-  );
 
   // Initials avatar for user
   const initials = user?.name
@@ -181,33 +177,56 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, certif
           </div>
         </div>
 
-        {/* Certification status pill */}
+        {/* Path toggle — segmented control */}
         {certificationStatus && (
           <div style={{
             marginTop: 14,
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: certificationStatus === 'certified'
-              ? 'rgba(16,185,129,0.15)' : 'rgba(253,189,16,0.12)',
-            border: certificationStatus === 'certified'
-              ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(253,189,16,0.25)',
-            borderRadius: 20, padding: '4px 10px',
+            background: 'rgba(0,0,0,0.25)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 10,
+            padding: 3,
+            display: 'flex',
+            gap: 2,
           }}>
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: certificationStatus === 'certified' ? '#10b981' : '#FDBD10',
-              boxShadow: certificationStatus === 'certified'
-                ? '0 0 5px #10b981' : '0 0 5px #FDBD10',
-            }} />
-            <span style={{
-              fontSize: 10.5, fontWeight: 600,
-              color: certificationStatus === 'certified'
-                ? '#34d399' : 'rgba(253,189,16,0.9)',
-              letterSpacing: '0.03em',
-            }}>
-              {certificationStatus === 'certified'
-                ? (lang === 'en' ? 'Certified Organic' : 'Certificado Orgánico')
-                : (lang === 'en' ? 'In Certification' : 'En Certificación')}
-            </span>
+            {[
+              { value: 'pursuing', label: lang === 'en' ? 'Pursuing' : 'En Proceso', color: '#FDBD10' },
+              { value: 'certified', label: lang === 'en' ? 'Certified' : 'Certificado', color: '#10b981' },
+            ].map(({ value, label, color }) => {
+              const isActive = certificationStatus === value;
+              return (
+                <motion.button
+                  key={value}
+                  onClick={() => onSetStatus ? onSetStatus(value) : onChangeStatus?.()}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    flex: 1,
+                    padding: '6px 4px',
+                    borderRadius: 7,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 10.5,
+                    fontWeight: isActive ? 700 : 500,
+                    fontFamily: 'Inter, sans-serif',
+                    letterSpacing: '0.02em',
+                    transition: 'all 0.18s',
+                    background: isActive
+                      ? `linear-gradient(135deg, ${color}30, ${color}18)`
+                      : 'transparent',
+                    color: isActive ? color : 'rgba(255,255,255,0.35)',
+                    boxShadow: isActive ? `inset 0 0 0 1px ${color}40` : 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  }}
+                >
+                  <div style={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    background: isActive ? color : 'rgba(255,255,255,0.2)',
+                    boxShadow: isActive ? `0 0 5px ${color}` : 'none',
+                    flexShrink: 0,
+                  }} />
+                  {label}
+                </motion.button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -229,45 +248,35 @@ export default function Sidebar({ activePage, onNavigate, user, onLogout, certif
 
         {NAV_ITEMS.map(({ id, icon }) => <NavBtn key={id} id={id} icon={icon} />)}
 
-        {/* Section label: Tools */}
-        <div style={{ marginTop: 14, marginBottom: 4 }}>
-          <button
-            onClick={() => setToolsOpen(o => !o)}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '6px 6px', border: 'none', background: 'transparent', cursor: 'pointer',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-              <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.12), transparent)' }} />
-              <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                {tx.tools}
-              </span>
-              <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12))' }} />
+        {/* Section divider: Compliance Tools */}
+        <div style={{ marginTop: 18, marginBottom: 8 }}>
+          <div style={{
+            margin: '0 -10px',
+            padding: '10px 16px 10px',
+            background: 'linear-gradient(90deg, rgba(58,168,228,0.12) 0%, rgba(58,168,228,0.04) 100%)',
+            borderTop: '1px solid rgba(58,168,228,0.2)',
+            borderBottom: '1px solid rgba(58,168,228,0.15)',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+              background: 'rgba(58,168,228,0.22)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Wrench size={11} color="#3AA8E4" strokeWidth={2.2} />
             </div>
-            <motion.div
-              animate={{ rotate: toolsOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ marginLeft: 8, flexShrink: 0 }}
-            >
-              <ChevronDown size={12} color="rgba(255,255,255,0.3)" />
-            </motion.div>
-          </button>
+            <span style={{
+              fontSize: 9.5, fontWeight: 700,
+              color: '#3AA8E4',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+            }}>
+              {tx.tools}
+            </span>
+            <div style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(58,168,228,0.25), transparent)' }} />
+          </div>
         </div>
 
-        <AnimatePresence initial={false}>
-          {toolsOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22 }}
-              style={{ overflow: 'hidden' }}
-            >
-              {TOOLS_ITEMS.map(({ id, icon }) => <NavBtn key={id} id={id} icon={icon} />)}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {TOOLS_ITEMS.map(({ id, icon }) => <NavBtn key={id} id={id} icon={icon} />)}
       </nav>
 
       {/* Footer */}
