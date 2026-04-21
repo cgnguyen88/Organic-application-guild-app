@@ -178,20 +178,6 @@ export default function AuthScreen({ onLogin }) {
             </button>
           </p>
 
-          <div style={{ marginTop: 32, padding: '20px', background: '#f8fafc', borderRadius: 12, border: '1px dashed #cbd5e1' }}>
-            <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12, textAlign: 'center', fontWeight: 500 }}>
-              DEVELOPMENT MODE
-            </p>
-            <button
-              onClick={() => onLogin({ id: 'demo-user-123', name: 'Demo Farmer', email: 'demo@organicpath.ca' })}
-              style={{
-                width: '100%', padding: '10px', background: 'white', border: '1.5px solid var(--u-sky)',
-                color: 'var(--u-sky)', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer'
-              }}
-            >
-              Skip Login (Test New Features)
-            </button>
-          </div>
         </div>
       </div>
     </div>
