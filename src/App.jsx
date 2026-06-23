@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase.js';
 import { getProfile, upsertProfile } from './lib/db.js';
 import { saveToStorage, loadFromStorage } from './utils/storage.js';
-import AuthScreen from './components/AuthScreen.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import EligibilityChecker from './components/EligibilityChecker.jsx';
@@ -37,6 +36,9 @@ export default function App() {
         const name = u.user_metadata?.name || u.email.split('@')[0];
         setUser({ id: u.id, name, email: u.email });
         loadUserProfile(u.id);
+      } else {
+        // v2: no login required — use a guest user
+        setUser({ id: 'guest', name: 'Guest', email: '' });
       }
       setAuthLoading(false);
     });
@@ -48,10 +50,8 @@ export default function App() {
         const name = u.user_metadata?.name || u.email.split('@')[0];
         setUser({ id: u.id, name, email: u.email });
         loadUserProfile(u.id);
-      } else {
-        setUser(null);
-        setProfile({});
       }
+      // v2: do not clear user on sign-out — auth is disabled
     });
 
     return () => subscription.unsubscribe();
@@ -71,16 +71,8 @@ export default function App() {
     }
   };
 
-  const handleLogin = (u) => {
-    setUser(u);
-    if (u.isNew) setForceGate(true);
-    if (u.id) loadUserProfile(u.id);
-  };
-
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile({});
+    // v2: auth disabled — no-op
   };
 
   const updateProfile = (data) => {
@@ -103,7 +95,7 @@ export default function App() {
     );
   }
 
-  if (!user) return <AuthScreen onLogin={handleLogin} />;
+  // v2: auth screen bypassed — no-auth mode
 
   const handleStatusSelect = (status) => {
     setForceGate(false);
